@@ -11,7 +11,7 @@ const fetchTodos = async (): Promise<Todo[]> => {
 };
 
 const updateTodoAPI = async (
-  updatedTodo: Pick<Todo, "id" | "completed">
+  updatedTodo: Pick<Todo, "id" | "completed">,
 ): Promise<Todo> => {
   const response = await fetch(`${API_URL}/${updatedTodo.id}`, {
     method: "PUT",
@@ -68,7 +68,7 @@ export const useTodos = () => {
       await queryClient.cancelQueries({ queryKey: ["todos"] });
       const previousTodos = queryClient.getQueryData<Todo[]>(["todos"]);
       queryClient.setQueryData<Todo[]>(["todos"], (old = []) =>
-        old.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+        old.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)),
       );
       return { previousTodos };
     },
@@ -90,7 +90,7 @@ export const useTodos = () => {
       await queryClient.cancelQueries({ queryKey: ["todos"] });
       const previousTodos = queryClient.getQueryData<Todo[]>(["todos"]);
       queryClient.setQueryData<Todo[]>(["todos"], (old = []) =>
-        old.filter((t) => t.id !== id)
+        old.filter((t) => t.id !== id),
       );
       return { previousTodos };
     },

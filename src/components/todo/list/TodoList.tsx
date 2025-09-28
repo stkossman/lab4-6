@@ -16,11 +16,11 @@ const TodoList: React.FC<TodoListProps> = ({ todos, onToggle, onDelete }) => {
   return (
     <div className="space-y-1">
       {todos.map((todo) => (
-        <TodoItem 
-            key={todo.id} 
-            todo={todo} 
-            onToggle={onToggle} 
-            onDelete={onDelete} 
+        <TodoItem
+          key={todo.id}
+          todo={todo}
+          onToggle={onToggle}
+          onDelete={onDelete}
         />
       ))}
     </div>

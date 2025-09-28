@@ -20,7 +20,9 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggle, onDelete }) => {
         />
         <span
           className={`text-lg transition-colors ${
-            todo.completed ? "line-through text-neutral-400" : "text-neutral-700"
+            todo.completed
+              ? "line-through text-neutral-400"
+              : "text-neutral-700"
           }`}
         >
           {todo.todo}
