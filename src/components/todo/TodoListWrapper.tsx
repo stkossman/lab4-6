@@ -37,12 +37,14 @@ const TodoListWrapper: React.FC = () => {
   };
 
   return (
-    <section className="max-w-xl mx-auto bg-white rounded-lg shadow-sm p-6 sm:p-8">
+    <section className="max-w-xl mx-auto bg-white dark:bg-neutral-800 rounded-lg shadow-sm p-6 sm:p-8">
       <TodoHeader />
       <AddTodoForm onAdd={addTodo} />
 
       {isLoading && (
-        <p className="text-center text-neutral-500 py-8">Loading...</p>
+        <p className="text-center text-neutral-500 dark:text-neutral-400 py-8">
+          Loading...
+        </p>
       )}
       {error && <p className="text-center text-red-500 py-8">Error: {error}</p>}
 

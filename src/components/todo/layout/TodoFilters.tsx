@@ -12,8 +12,10 @@ const FilterButton: React.FC<{
   isActive: boolean;
   onClick: () => void;
 }> = ({ label, isActive, onClick }) => {
-  const activeClass = "bg-neutral-800 text-white";
-  const inactiveClass = "bg-neutral-100 text-neutral-600 hover:bg-neutral-200";
+  const activeClass =
+    "bg-neutral-800 dark:bg-neutral-200 text-white dark:text-black";
+  const inactiveClass =
+    "bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600";
 
   return (
     <button
@@ -54,7 +56,7 @@ const TodoFilters: React.FC<TodoFiltersProps> = ({
       {hasCompletedTodos && (
         <button
           onClick={onClearCompleted}
-          className="text-sm text-neutral-500 hover:text-red-500 hover:underline transition-colors"
+          className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-red-500 dark:hover:text-red-400 hover:underline transition-colors"
         >
           Clear completed
         </button>
