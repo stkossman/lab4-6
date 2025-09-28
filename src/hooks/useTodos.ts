@@ -1,33 +1,24 @@
+import axios from 'axios';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Todo } from "../types/todo";
 
 const API_URL = "https://dummyjson.com/todos";
 
 const fetchTodos = async (): Promise<Todo[]> => {
-  const response = await fetch(`${API_URL}?limit=10`);
-  if (!response.ok) throw new Error("Failed to fetch todos");
-  const data = await response.json();
-  return data.todos;
+  const response = await axios.get(`${API_URL}?limit=10`);
+  return response.data.todos;
 };
 
-const updateTodoAPI = async (
-  updatedTodo: Pick<Todo, "id" | "completed">,
-): Promise<Todo> => {
-  const response = await fetch(`${API_URL}/${updatedTodo.id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ completed: updatedTodo.completed }),
+const updateTodoAPI = async (updatedTodo: Pick<Todo, 'id' | 'completed'>): Promise<Todo> => {
+  const response = await axios.put(`${API_URL}/${updatedTodo.id}`, {
+    completed: updatedTodo.completed,
   });
-  if (!response.ok) throw new Error("Failed to update todo");
-  return response.json();
+  return response.data;
 };
 
 const deleteTodoAPI = async (id: number): Promise<Todo> => {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: "DELETE",
-  });
-  if (!response.ok) throw new Error("Failed to delete todo");
-  return response.json();
+  const response = await axios.delete(`${API_URL}/${id}`);
+  return response.data;
 };
 
 interface MutationContext {
