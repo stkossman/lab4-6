@@ -1,73 +1,88 @@
-# React + TypeScript + Vite
+# Homework/Lab 4-6
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This repository will be for works from 4 to 6 from my university React course.
 
-Currently, two official plugins are available:
+## What needed to be done for homework #4:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+_Create a Todo List app that uses a custom hook to handle all data fetching and state management for the todo items, utilizing a fake REST API that supports CRUD operations. The custom hook should abstract away the logic for fetching the todo list, adding new todos, updating existing ones, and deletim them, providing a clean interface to any component that needs todo data and functionality. + The Component Tree & Data Flow diagram._
 
-## React Compiler
+### Component Tree & Data Flow diagram
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+#### Diagram
 
-## Expanding the ESLint configuration
+```mermaid
+graph TD;
+    %% Component Definitions
+    App["App (Root)<br/><i>Renders layout, ThemeToggle</i>"]
+    ThemeToggle["ThemeToggle<br/><i>useTheme() hook</i>"]
+    TodoListWrapper["TodoListWrapper<br/><b>State:</b> filter<br/><i>useTodos() hook</i>"]
+    Footer["Footer<br/><i>Static content</i>"]
+    
+    TodoHeader["TodoHeader<br/><i>Displays title</i>"]
+    AddTodoForm["AddTodoForm<br/><b>Props:</b> onAdd"]
+    TodoFilters["TodoFilters<br/><b>Props:</b> activeFilter, onSetFilter, onClearCompleted"]
+    TodoList["TodoList<br/><b>Props:</b> todos[], onToggle, onDelete"]
+    TodoStats["TodoStats<br/><b>Props:</b> count"]
+    
+    TodoItem["TodoItem<br/><b>Props:</b> todo, onToggle, onDelete"]
+    TodoEmpty["TodoEmpty<br/><i>Shown when filtered list is empty</i>"]
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+    %% Component Hierarchy
+    subgraph "Application Structure"
+        App --> ThemeToggle
+        App --> TodoListWrapper
+        App --> Footer
+    end
 
-```js
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
+    subgraph "Todo Feature"
+        TodoListWrapper --> TodoHeader
+        TodoListWrapper --> AddTodoForm
+        TodoListWrapper --> TodoFilters
+        TodoListWrapper --> TodoList
+        TodoListWrapper --> TodoStats
+    end
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+    subgraph "List Rendering"
+        TodoList --> TodoItem
+        TodoList -- "filteredTodos.length === 0" --> TodoEmpty
+    end
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+    %% Data & Callback Flow (Dashed Lines)
+    style TodoListWrapper fill:#e6f3ff,stroke:#b3d9ff,stroke-width:2px
+    
+    AddTodoForm -.->|"onAdd(text)"| TodoListWrapper
+    TodoFilters -.->|"onSetFilter(filterType)"| TodoListWrapper
+    TodoFilters -.->|"onClearCompleted()"| TodoListWrapper
+    TodoItem -.->|"onToggle(id)"| TodoList
+    TodoItem -.->|"onDelete(id)"| TodoList
+    TodoList -.->|"onToggle(id)<br/>onDelete(id)"| TodoListWrapper
+
+    classDef stateful fill:#fff2cc,stroke:#ffd966
+    class TodoListWrapper stateful
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
-
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs["recommended-typescript"],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
-```
+#### Diagram Explained
+- **App**: The composition root. It renders the main layout, including the ThemeToggle, TodoListWrapper, and Footer. It holds no application state.
+- **ThemeToggle**: Uses a useTheme hook to toggle the dark class on the <html> element and persists the choice in localStorage.
+- **TodoListWrapper**:
+  - This is the primary "smart" component.
+  - It calls the useTodos() custom hook to get the todos array, loading/error states, and action functions (addTodo, toggleTodo, deleteTodo).
+  - It manages the local filter state ('all', 'active', 'done').
+  - **Data Down**: It passes addTodo to AddTodoForm.
+  - **Data Down**: It passes the filteredTodos array, toggleTodo, and deleteTodo to the TodoList component.
+  - **Data Down**: It passes filter state and control functions (activeFilter, onSetFilter, onClearCompleted) to TodoFilters.
+- **AddTodoForm**:
+  - A "dumb" component that receives onAdd as a prop.
+  - **Callback Up**: On form submission, it invokes onAdd(newTodoText), sending the new task's content up to be handled by the useTodos hook.
+- **TodoFilters**:
+  - Receives the current filter and functions to change it.
+  - **Callback Up**: Invokes onSetFilter(filterType) when a filter button is clicked.
+  - **Callback Up**: Invokes onClearCompleted() when the "Clear" button is clicked.
+- **TodoList**:
+  - Receives the filteredTodos array.
+  - If the array is empty, it conditionally renders the TodoEmpty component.
+  - Otherwise, it maps over the array and renders a TodoItem for each todo, passing down the todo object and the onToggle and onDelete callbacks.
+- **TodoItem**:
+  - Displays a single todo.
+  - **Callback Up**: Invokes onToggle(todo.id) when its checkbox is clicked.
+  - **Callback Up**: Invokes onDelete(todo.id) when its delete button is clicked
