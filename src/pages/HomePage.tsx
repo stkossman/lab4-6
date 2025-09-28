@@ -1,11 +1,7 @@
-import { TodoList } from "../components/todo/list/TodoList";
+import TodoListWrapper from '../components/todo/TodoListWrapper';
 
-const HomePage = () => {
-  return (
-    <main className="container p-4 mx-auto">
-      <TodoList />
-    </main>
-  );
-};
+const HomePage: React.FC = () => {
+    return <TodoListWrapper />;
+}
 
 export default HomePage;

@@ -30,15 +30,15 @@ const deleteTodoAPI = async (id: number): Promise<Todo> => {
   return response.json();
 };
 
+interface MutationContext {
+  previousTodos: Todo[] | undefined;
+}
+
 export const useTodos = () => {
   const queryClient = useQueryClient();
 
-  const {
-    data: todos = [],
-    isLoading,
-    error,
-  } = useQuery<Todo[], Error>({
-    queryKey: ["todos"],
+  const { data: todos = [], isLoading, error } = useQuery<Todo[], Error>({
+    queryKey: ['todos'],
     queryFn: fetchTodos,
     staleTime: 5 * 60 * 1000,
   });
@@ -55,7 +55,7 @@ export const useTodos = () => {
     ]);
   };
 
-  const { mutate: toggleTodo } = useMutation<Todo, Error, number>({
+  const { mutate: toggleTodo } = useMutation<Todo, Error, number, MutationContext>({
     mutationFn: (id) => {
       if (id < 1000) {
         const todo = todos.find((t) => t.id === id);
@@ -65,21 +65,21 @@ export const useTodos = () => {
       return Promise.resolve({} as Todo);
     },
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ["todos"] });
-      const previousTodos = queryClient.getQueryData<Todo[]>(["todos"]);
-      queryClient.setQueryData<Todo[]>(["todos"], (old = []) =>
-        old.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)),
+      await queryClient.cancelQueries({ queryKey: ['todos'] });
+      const previousTodos = queryClient.getQueryData<Todo[]>(['todos']);
+      queryClient.setQueryData<Todo[]>(['todos'], (old = []) =>
+        old.map(t => t.id === id ? { ...t, completed: !t.completed } : t)
       );
       return { previousTodos };
     },
-    onError: (err, id, context) => {
+    onError: (_err, _id, context) => {
       if (context?.previousTodos) {
-        queryClient.setQueryData(["todos"], context.previousTodos);
+        queryClient.setQueryData(['todos'], context.previousTodos);
       }
     },
   });
 
-  const { mutate: deleteTodo } = useMutation<Todo, Error, number>({
+  const { mutate: deleteTodo } = useMutation<Todo, Error, number, MutationContext>({
     mutationFn: (id: number) => {
       if (id < 1000) {
         return deleteTodoAPI(id);
@@ -87,16 +87,14 @@ export const useTodos = () => {
       return Promise.resolve({} as Todo);
     },
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ["todos"] });
-      const previousTodos = queryClient.getQueryData<Todo[]>(["todos"]);
-      queryClient.setQueryData<Todo[]>(["todos"], (old = []) =>
-        old.filter((t) => t.id !== id),
-      );
+      await queryClient.cancelQueries({ queryKey: ['todos'] });
+      const previousTodos = queryClient.getQueryData<Todo[]>(['todos']);
+      queryClient.setQueryData<Todo[]>(['todos'], (old = []) => old.filter((t) => t.id !== id));
       return { previousTodos };
     },
-    onError: (err, id, context) => {
+    onError: (_err, _id, context) => {
       if (context?.previousTodos) {
-        queryClient.setQueryData(["todos"], context.previousTodos);
+        queryClient.setQueryData(['todos'], context.previousTodos);
       }
     },
   });

@@ -1,4 +1,4 @@
-import TodoListWrapper from "./components/todo/TodoListWrapper";
+import HomePage from './pages/HomePage';
 import Footer from "./components/Footer";
 import ThemeToggle from "./components/ThemeToggle";
 
@@ -9,7 +9,7 @@ const App: React.FC = () => {
         <ThemeToggle />
       </header>
       <main className="flex-grow mb-8 px-4">
-        <TodoListWrapper />
+        <HomePage />
       </main>
       <Footer />
     </div>
