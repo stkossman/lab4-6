@@ -1,5 +1,5 @@
-import axios from "axios";
-import { useState, useMemo, useRef } from "react";
+import axios from 'axios';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Todo } from "../types/todo";
 
@@ -17,9 +17,7 @@ const fetchAllTodos = async (): Promise<TodosResponse> => {
   return response.data;
 };
 
-const updateTodoAPI = async (
-  updatedTodo: Pick<Todo, "id" | "completed">,
-): Promise<Todo> => {
+const updateTodoAPI = async (updatedTodo: Pick<Todo, 'id' | 'completed'>): Promise<Todo> => {
   const response = await axios.put(`${API_URL}/${updatedTodo.id}`, {
     completed: updatedTodo.completed,
   });
@@ -44,29 +42,34 @@ export const useTodos = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [limitPerPage, setLimitPerPage] = useState(10);
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
 
   const deletedIdsRef = useRef<Set<number>>(new Set());
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ["todos"],
+    queryKey: ['todos'],
     queryFn: fetchAllTodos,
     staleTime: 5 * 60 * 1000,
   });
-
+  
   const allTodos = data?.todos || [];
 
   const todosWithoutDeleted = useMemo(() => {
-    return allTodos.filter((todo) => !deletedIdsRef.current.has(todo.id));
+    return allTodos.filter(todo => !deletedIdsRef.current.has(todo.id));
   }, [allTodos]);
 
   const searchFilteredTodos = useMemo(() => {
     if (!searchTerm.trim()) return todosWithoutDeleted;
-
-    return todosWithoutDeleted.filter((todo) =>
-      todo.todo.toLowerCase().includes(searchTerm.toLowerCase()),
+    
+    return todosWithoutDeleted.filter(todo =>
+      todo.todo.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [todosWithoutDeleted, searchTerm]);
+  
 
   const totalTodos = searchFilteredTodos.length;
 
@@ -77,19 +80,19 @@ export const useTodos = () => {
   }, [searchFilteredTodos, currentPage, limitPerPage]);
 
   const totalPages = Math.ceil(totalTodos / limitPerPage);
-
+  
   const goToNextPage = () => {
     if (currentPage < totalPages) {
-      setCurrentPage((prev) => prev + 1);
+      setCurrentPage(prev => prev + 1);
     }
   };
-
+  
   const goToPrevPage = () => {
     if (currentPage > 1) {
-      setCurrentPage((prev) => prev - 1);
+      setCurrentPage(prev => prev - 1);
     }
   };
-
+  
   const setLimit = (limit: number) => {
     setLimitPerPage(limit);
     setCurrentPage(1);
@@ -102,19 +105,16 @@ export const useTodos = () => {
       completed: false,
       userId: 1,
     };
-
-    queryClient.setQueryData(
-      ["todos"],
-      (oldData: TodosResponse | undefined) => {
-        if (!oldData) return { todos: [newTodo], total: 1, skip: 0, limit: 0 };
-        return {
-          ...oldData,
-          todos: [newTodo, ...oldData.todos],
-          total: oldData.total + 1,
-        };
-      },
-    );
-
+    
+    queryClient.setQueryData(['todos'], (oldData: TodosResponse | undefined) => {
+      if (!oldData) return { todos: [newTodo], total: 1, skip: 0, limit: 0 };
+      return {
+        ...oldData,
+        todos: [newTodo, ...oldData.todos],
+        total: oldData.total + 1,
+      };
+    });
+    
     setCurrentPage(1);
   };
 
@@ -128,24 +128,22 @@ export const useTodos = () => {
       return Promise.resolve({} as Todo);
     },
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ["todos"] });
-      const previousTodos = queryClient.getQueryData(["todos"]);
-
-      queryClient.setQueryData(["todos"], (old: TodosResponse | undefined) => {
+      await queryClient.cancelQueries({ queryKey: ['todos'] });
+      const previousTodos = queryClient.getQueryData(['todos']);
+      
+      queryClient.setQueryData(['todos'], (old: TodosResponse | undefined) => {
         if (!old) return old;
         return {
           ...old,
-          todos: old.todos.map((t) =>
-            t.id === id ? { ...t, completed: !t.completed } : t,
-          ),
+          todos: old.todos.map(t => t.id === id ? { ...t, completed: !t.completed } : t)
         };
       });
-
+      
       return { previousTodos };
     },
     onError: (_err, _id, context) => {
       if (context?.previousTodos) {
-        queryClient.setQueryData(["todos"], context.previousTodos);
+        queryClient.setQueryData(['todos'], context.previousTodos);
       }
     },
   });
@@ -158,24 +156,22 @@ export const useTodos = () => {
       return Promise.resolve({} as Todo);
     },
     onMutate: async ({ id, newTitle }) => {
-      await queryClient.cancelQueries({ queryKey: ["todos"] });
-      const previousTodos = queryClient.getQueryData(["todos"]);
-
-      queryClient.setQueryData(["todos"], (old: TodosResponse | undefined) => {
+      await queryClient.cancelQueries({ queryKey: ['todos'] });
+      const previousTodos = queryClient.getQueryData(['todos']);
+      
+      queryClient.setQueryData(['todos'], (old: TodosResponse | undefined) => {
         if (!old) return old;
         return {
           ...old,
-          todos: old.todos.map((t) =>
-            t.id === id ? { ...t, todo: newTitle } : t,
-          ),
+          todos: old.todos.map(t => t.id === id ? { ...t, todo: newTitle } : t)
         };
       });
-
+      
       return { previousTodos };
     },
     onError: (_err, _variables, context) => {
       if (context?.previousTodos) {
-        queryClient.setQueryData(["todos"], context.previousTodos);
+        queryClient.setQueryData(['todos'], context.previousTodos);
       }
     },
   });
@@ -189,11 +185,11 @@ export const useTodos = () => {
     },
     onMutate: async (id) => {
       deletedIdsRef.current.add(id);
-
-      await queryClient.cancelQueries({ queryKey: ["todos"] });
-      const previousTodos = queryClient.getQueryData(["todos"]);
-
-      queryClient.setQueryData(["todos"], (old: TodosResponse | undefined) => {
+      
+      await queryClient.cancelQueries({ queryKey: ['todos'] });
+      const previousTodos = queryClient.getQueryData(['todos']);
+      
+      queryClient.setQueryData(['todos'], (old: TodosResponse | undefined) => {
         if (!old) return old;
         return {
           ...old,
@@ -201,25 +197,25 @@ export const useTodos = () => {
           total: old.total - 1,
         };
       });
-
+      
       const remainingTodosCount = todosWithoutDeleted.length - 1;
       const startIndex = (currentPage - 1) * limitPerPage;
-
+      
       if (startIndex >= remainingTodosCount && currentPage > 1) {
-        setCurrentPage((prev) => prev - 1);
+        setCurrentPage(prev => prev - 1);
       }
-
+      
       return { previousTodos };
     },
     onError: (_err, id, context) => {
       deletedIdsRef.current.delete(id);
-
+      
       if (context?.previousTodos) {
-        queryClient.setQueryData(["todos"], context.previousTodos);
+        queryClient.setQueryData(['todos'], context.previousTodos);
       }
     },
   });
-
+  
   return {
     todos: paginatedTodos,
     isLoading,
@@ -227,8 +223,7 @@ export const useTodos = () => {
     addTodo,
     toggleTodo,
     deleteTodo,
-    editTodoTitle: (id: number, newTitle: string) =>
-      editTodoTitle({ id, newTitle }),
+    editTodoTitle: (id: number, newTitle: string) => editTodoTitle({ id, newTitle }),
     currentPage,
     limitPerPage,
     totalTodos,
