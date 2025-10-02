@@ -36,14 +36,13 @@ _Create a Todo List app that uses a custom hook to handle all data fetching and 
 
 ```mermaid
 graph TD;
-    %% Component Definitions
     App["App (Root)<br/><i>Renders layout, ThemeToggle</i>"]
-    ThemeToggle["ThemeToggle<br/><i>useTheme() hook</i>"]
-    TodoListWrapper["TodoListWrapper<br/><b>State:</b> filter<br/><i>useTodos() hook</i>"]
+    ThemeToggle["ThemeToggle<br/><i>useTheme() hook<br/><b>State:</b> theme</i>"]
+    TodoListWrapper["TodoListWrapper<br/><i>useTodos() hook</i><br/><b>State:</b> filter, todos, loading, error"]
     Footer["Footer<br/><i>Static content</i>"]
 
     TodoHeader["TodoHeader<br/><i>Displays title</i>"]
-    AddTodoForm["AddTodoForm<br/><b>Props:</b> onAdd"]
+    AddTodoForm["AddTodoForm<br/><b>State:</b> inputText<br/><b>Props:</b> onAdd"]
     TodoFilters["TodoFilters<br/><b>Props:</b> activeFilter, onSetFilter, onClearCompleted"]
     TodoList["TodoList<br/><b>Props:</b> todos[], onToggle, onDelete"]
     TodoStats["TodoStats<br/><b>Props:</b> count"]
@@ -51,7 +50,6 @@ graph TD;
     TodoItem["TodoItem<br/><b>Props:</b> todo, onToggle, onDelete"]
     TodoEmpty["TodoEmpty<br/><i>Shown when filtered list is empty</i>"]
 
-    %% Component Hierarchy
     subgraph "Application Structure"
         App --> ThemeToggle
         App --> TodoListWrapper
@@ -80,9 +78,6 @@ graph TD;
     TodoItem -.->|"onToggle(id)"| TodoList
     TodoItem -.->|"onDelete(id)"| TodoList
     TodoList -.->|"onToggle(id)<br/>onDelete(id)"| TodoListWrapper
-
-    classDef stateful fill:#fff2cc,stroke:#ffd966
-    class TodoListWrapper stateful
 ```
 
 #### Diagram Explained
