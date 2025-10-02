@@ -1,7 +1,6 @@
 import React from "react";
 import { useTodos } from "../../hooks/useTodos";
 import AddTodoForm from "./form/AddTodoForm";
-import TodoHeader from "./layout/TodoHeader";
 import TodoList from "./list/TodoList";
 import TodoFilters from "./layout/TodoFilters";
 import TodoSearch from "./layout/TodoSearch";
@@ -48,7 +47,6 @@ const TodoListWrapper: React.FC = () => {
       )}
       {!isLoading && !error && (
         <>
-          <TodoHeader />
           <AddTodoForm onAdd={addTodo} />
           <TodoSearch
             searchTerm={searchTerm}
