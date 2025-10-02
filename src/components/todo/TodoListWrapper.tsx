@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React from "react";
 import { useTodos } from "../../hooks/useTodos";
 import AddTodoForm from "./form/AddTodoForm";
 import TodoHeader from "./layout/TodoHeader";
@@ -6,8 +6,6 @@ import TodoList from "./list/TodoList";
 import TodoFilters from "./layout/TodoFilters";
 import TodoSearch from "./layout/TodoSearch";
 import TodoPagination from "./layout/TodoPagination";
-
-type FilterType = "all" | "active" | "done";
 
 const TodoListWrapper: React.FC = () => {
   const {
@@ -26,51 +24,44 @@ const TodoListWrapper: React.FC = () => {
     setLimit,
     searchTerm,
     setSearchTerm,
+    filter,
+    setFilter,
+    completedCount,
   } = useTodos();
 
-  const [filter, setFilter] = useState<FilterType>("all");
-
-  const filteredTodos = useMemo(() => {
-    switch (filter) {
-      case "active":
-        return todos.filter((todo) => !todo.completed);
-      case "done":
-        return todos.filter((todo) => todo.completed);
-      default:
-        return todos;
-    }
-  }, [todos, filter]);
-
   const clearCompleted = () => {
-    const completedIds = todos
-      .filter((todo) => todo.completed)
-      .map((todo) => todo.id);
-    completedIds.forEach((id) => deleteTodo(id));
+    const completedTodos = todos.filter((todo) => todo.completed);
+    completedTodos.forEach((todo) => deleteTodo(todo.id));
   };
 
   return (
-    <div className="max-w-xl mx-auto bg-white dark:bg-neutral-800 rounded-lg shadow-sm p-6">
+    <div className="w-full max-w-3xl mx-auto">
       {isLoading && (
-        <div className="text-center text-neutral-500 dark:text-neutral-400 py-8">
+        <div className="text-center py-8 text-neutral-600 dark:text-neutral-400">
           Loading...
         </div>
       )}
       {error && (
-        <div className="text-center text-red-500 py-8">Error: {error}</div>
+        <div className="text-center py-8 text-red-600 dark:text-red-400">
+          Error: {error}
+        </div>
       )}
       {!isLoading && !error && (
         <>
           <TodoHeader />
           <AddTodoForm onAdd={addTodo} />
-          <TodoSearch searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+          <TodoSearch
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+          />
           <TodoFilters
             activeFilter={filter}
             onSetFilter={setFilter}
             onClearCompleted={clearCompleted}
-            hasCompletedTodos={todos.some((t) => t.completed)}
+            hasCompletedTodos={completedCount > 0}
           />
           <TodoList
-            todos={filteredTodos}
+            todos={todos}
             onToggle={toggleTodo}
             onDelete={deleteTodo}
             onEdit={editTodoTitle}

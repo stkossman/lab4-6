@@ -36,3 +36,5 @@ export interface TodoSearchProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
 }
+
+export type FilterType = "all" | "active" | "done";

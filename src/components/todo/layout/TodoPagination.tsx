@@ -1,4 +1,4 @@
-import FilterButton from "../../ui/FilterButton";
+import Button from "../../ui/Button";
 import type { TodoPaginationProps } from "../../../types/todo";
 
 const TodoPagination: React.FC<TodoPaginationProps> = ({
@@ -32,23 +32,25 @@ const TodoPagination: React.FC<TodoPaginationProps> = ({
       </div>
 
       <div className="flex items-center justify-center gap-4">
-        <FilterButton
-          label="Previous"
-          isActive={false}
+        <Button
+          variant="secondary"
+          size="md"
           onClick={onPrevPage}
-          className={currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""}
-        />
+          disabled={currentPage === 1}
+        >
+          Previous
+        </Button>
         <span className="text-sm font-medium text-neutral-800 dark:text-white">
           {currentPage} of {totalPages}
         </span>
-        <FilterButton
-          label="Next"
-          isActive={false}
+        <Button
+          variant="secondary"
+          size="md"
           onClick={onNextPage}
-          className={
-            currentPage >= totalPages ? "opacity-50 cursor-not-allowed" : ""
-          }
-        />
+          disabled={currentPage >= totalPages}
+        >
+          Next
+        </Button>
       </div>
     </div>
   );

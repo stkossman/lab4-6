@@ -5,6 +5,8 @@ import type { Todo } from "../types/todo";
 
 const API_URL = "https://dummyjson.com/todos";
 
+export type FilterType = "all" | "active" | "done";
+
 interface TodosResponse {
   todos: Todo[];
   total: number;
@@ -43,12 +45,13 @@ export const useTodos = () => {
   const [limitPerPage, setLimitPerPage] = useState(10);
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState<FilterType>("all");
 
   const deletedIdsRef = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, filter]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['todos'],
@@ -62,14 +65,24 @@ export const useTodos = () => {
     return allTodos.filter(todo => !deletedIdsRef.current.has(todo.id));
   }, [allTodos]);
 
+  const statusFilteredTodos = useMemo(() => {
+    switch (filter) {
+      case "active":
+        return todosWithoutDeleted.filter((todo) => !todo.completed);
+      case "done":
+        return todosWithoutDeleted.filter((todo) => todo.completed);
+      default:
+        return todosWithoutDeleted;
+    }
+  }, [todosWithoutDeleted, filter]);
+
   const searchFilteredTodos = useMemo(() => {
-    if (!searchTerm.trim()) return todosWithoutDeleted;
+    if (!searchTerm.trim()) return statusFilteredTodos;
     
-    return todosWithoutDeleted.filter(todo =>
+    return statusFilteredTodos.filter(todo =>
       todo.todo.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [todosWithoutDeleted, searchTerm]);
-  
+  }, [statusFilteredTodos, searchTerm]);
 
   const totalTodos = searchFilteredTodos.length;
 
@@ -78,6 +91,16 @@ export const useTodos = () => {
     const endIndex = startIndex + limitPerPage;
     return searchFilteredTodos.slice(startIndex, endIndex);
   }, [searchFilteredTodos, currentPage, limitPerPage]);
+
+  const activeCount = useMemo(
+    () => todosWithoutDeleted.filter((t) => !t.completed).length,
+    [todosWithoutDeleted],
+  );
+  
+  const completedCount = useMemo(
+    () => todosWithoutDeleted.filter((t) => t.completed).length,
+    [todosWithoutDeleted],
+  );
 
   const totalPages = Math.ceil(totalTodos / limitPerPage);
   
@@ -117,7 +140,7 @@ export const useTodos = () => {
     
     setCurrentPage(1);
   };
-
+  
   const { mutate: toggleTodo } = useMutation({
     mutationFn: (id: number) => {
       if (id < 1000) {
@@ -198,7 +221,7 @@ export const useTodos = () => {
         };
       });
       
-      const remainingTodosCount = todosWithoutDeleted.length - 1;
+      const remainingTodosCount = searchFilteredTodos.length - 1;
       const startIndex = (currentPage - 1) * limitPerPage;
       
       if (startIndex >= remainingTodosCount && currentPage > 1) {
@@ -232,5 +255,9 @@ export const useTodos = () => {
     setLimit,
     searchTerm,
     setSearchTerm,
+    filter,
+    setFilter,
+    activeCount,
+    completedCount,
   };
 };
