@@ -7,6 +7,7 @@ This repository will be for works from 4 to 6 from my university React course.
 _Create a Todo List app that uses a custom hook to handle all data fetching and state management for the todo items, utilizing a fake REST API that supports CRUD operations. The custom hook should abstract away the logic for fetching the todo list, adding new todos, updating existing ones, and deletim them, providing a clean interface to any component that needs todo data and functionality. + The Component Tree & Data Flow diagram._
 
 ## Tech Stack
+
 - [React](https://react.dev/)
 - [React Query (_TanStack Query_)](https://tanstack.com/query/latest)
 - [React Icons](https://react-icons.github.io/react-icons/)
@@ -29,7 +30,6 @@ _Create a Todo List app that uses a custom hook to handle all data fetching and 
 - **Conditional Rendering**: E.g. the `TodoList` component renders the `TodoEmpty` component only when the `filteredTodos` array is empty.
 - **State Colocation**: Global server state (`todos`) is managed by React Query and lifted to the `TodoListWrapper`. UI-specific state, like the input text in `AddTodoForm`, is kept local to that component, preventing unnecessary re-renders of the entire app.
 
-
 ### Component Tree & Data Flow diagram
 
 #### Diagram
@@ -41,13 +41,13 @@ graph TD;
     ThemeToggle["ThemeToggle<br/><i>useTheme() hook</i>"]
     TodoListWrapper["TodoListWrapper<br/><b>State:</b> filter<br/><i>useTodos() hook</i>"]
     Footer["Footer<br/><i>Static content</i>"]
-    
+
     TodoHeader["TodoHeader<br/><i>Displays title</i>"]
     AddTodoForm["AddTodoForm<br/><b>Props:</b> onAdd"]
     TodoFilters["TodoFilters<br/><b>Props:</b> activeFilter, onSetFilter, onClearCompleted"]
     TodoList["TodoList<br/><b>Props:</b> todos[], onToggle, onDelete"]
     TodoStats["TodoStats<br/><b>Props:</b> count"]
-    
+
     TodoItem["TodoItem<br/><b>Props:</b> todo, onToggle, onDelete"]
     TodoEmpty["TodoEmpty<br/><i>Shown when filtered list is empty</i>"]
 
@@ -73,7 +73,7 @@ graph TD;
 
     %% Data & Callback Flow (Dashed Lines)
     style TodoListWrapper fill:#e6f3ff,stroke:#b3d9ff,stroke-width:2px
-    
+
     AddTodoForm -.->|"onAdd(text)"| TodoListWrapper
     TodoFilters -.->|"onSetFilter(filterType)"| TodoListWrapper
     TodoFilters -.->|"onClearCompleted()"| TodoListWrapper
@@ -86,6 +86,7 @@ graph TD;
 ```
 
 #### Diagram Explained
+
 - **App**: The composition root. It renders the main layout, including the ThemeToggle, TodoListWrapper, and Footer. It holds no application state.
 - **ThemeToggle**: Uses a useTheme hook to toggle the dark class on the <html> element and persists the choice in localStorage.
 - **TodoListWrapper**:

@@ -1,4 +1,4 @@
-type FilterType = "all" | "active" | "done";
+import FilterButton from "../../ui/FilterButton";
 
 interface TodoFiltersProps {
   activeFilter: FilterType;
@@ -7,25 +7,7 @@ interface TodoFiltersProps {
   hasCompletedTodos: boolean;
 }
 
-const FilterButton: React.FC<{
-  label: string;
-  isActive: boolean;
-  onClick: () => void;
-}> = ({ label, isActive, onClick }) => {
-  const activeClass =
-    "bg-neutral-800 dark:bg-neutral-200 text-white dark:text-black";
-  const inactiveClass =
-    "bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600";
-
-  return (
-    <button
-      onClick={onClick}
-      className={`px-4 py-2 text-sm rounded-md transition-colors ${isActive ? activeClass : inactiveClass}`}
-    >
-      {label}
-    </button>
-  );
-};
+type FilterType = "all" | "active" | "done";
 
 const TodoFilters: React.FC<TodoFiltersProps> = ({
   activeFilter,
@@ -34,29 +16,26 @@ const TodoFilters: React.FC<TodoFiltersProps> = ({
   hasCompletedTodos,
 }) => {
   return (
-    <div className="flex items-center justify-between p-2">
-      <div className="flex items-center gap-2">
-        <FilterButton
-          label="All"
-          isActive={activeFilter === "all"}
-          onClick={() => onSetFilter("all")}
-        />
-        <FilterButton
-          label="To Be Done"
-          isActive={activeFilter === "active"}
-          onClick={() => onSetFilter("active")}
-        />
-        <FilterButton
-          label="Done"
-          isActive={activeFilter === "done"}
-          onClick={() => onSetFilter("done")}
-        />
-      </div>
-
+    <div className="flex gap-2 mb-4 flex-wrap">
+      <FilterButton
+        label="All"
+        isActive={activeFilter === "all"}
+        onClick={() => onSetFilter("all")}
+      />
+      <FilterButton
+        label="Active"
+        isActive={activeFilter === "active"}
+        onClick={() => onSetFilter("active")}
+      />
+      <FilterButton
+        label="Done"
+        isActive={activeFilter === "done"}
+        onClick={() => onSetFilter("done")}
+      />
       {hasCompletedTodos && (
         <button
           onClick={onClearCompleted}
-          className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-red-500 dark:hover:text-red-400 hover:underline transition-colors"
+          className="px-4 py-2 text-sm rounded-md transition-colors bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800"
         >
           Clear completed
         </button>

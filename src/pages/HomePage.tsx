@@ -1,7 +1,7 @@
-import TodoListWrapper from '../components/todo/TodoListWrapper';
+import TodoListWrapper from "../components/todo/TodoListWrapper";
 
 const HomePage: React.FC = () => {
-    return <TodoListWrapper />;
-}
+  return <TodoListWrapper />;
+};
 
 export default HomePage;

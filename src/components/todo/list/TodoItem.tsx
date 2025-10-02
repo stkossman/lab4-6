@@ -1,6 +1,11 @@
+import { useState } from "react";
+import Button from "../../ui/Button";
 import type { TodoItemProps } from "../../../types/todo";
 
-const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggle, onDelete }) => {
+const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggle, onDelete, onEdit }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(todo.todo);
+
   const handleToggle = () => {
     onToggle(todo.id);
   };
@@ -9,41 +14,82 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggle, onDelete }) => {
     onDelete(todo.id);
   };
 
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleSave = () => {
+    if (editValue.trim() && editValue !== todo.todo) {
+      onEdit(todo.id, editValue.trim());
+    }
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditValue(todo.todo);
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSave();
+    } else if (e.key === 'Escape') {
+      handleCancel();
+    }
+  };
+
   return (
-    <div className="group flex items-center justify-between p-4 bg-transparent border-b border-neutral-200 dark:border-neutral-700 last:border-b-0">
-      <div className="flex items-center space-x-4">
+    <li className="group flex items-center gap-3 p-3 border-b border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+      <input
+        type="checkbox"
+        checked={todo.completed}
+        onChange={handleToggle}
+        className="w-5 h-5 rounded border-neutral-300 dark:border-neutral-600 text-neutral-800 dark:text-neutral-200 focus:ring-2 focus:ring-neutral-400 cursor-pointer"
+      />
+      
+      {isEditing ? (
         <input
-          type="checkbox"
-          checked={todo.completed}
-          onChange={handleToggle}
-          className="w-6 h-6 rounded-full border-2 text-neutral-500 dark:text-neutral-400 border-neutral-300 dark:border-neutral-600 focus:ring-neutral-400 dark:focus:ring-neutral-500 focus:ring-offset-2 bg-transparent dark:bg-neutral-800"
+          type="text"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="flex-1 px-2 py-1 text-neutral-800 dark:text-white bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded focus:outline-none focus:ring-2 focus:ring-neutral-400"
+          autoFocus
         />
+      ) : (
         <span
-          className={`text-lg transition-colors ${todo.completed ? "line-through text-neutral-400 dark:text-neutral-500" : "text-neutral-700 dark:text-neutral-200"}`}
+          className={`flex-1 text-neutral-800 dark:text-white ${
+            todo.completed
+              ? "line-through text-neutral-400 dark:text-neutral-500"
+              : ""
+          }`}
         >
           {todo.todo}
         </span>
+      )}
+      
+      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        {isEditing ? (
+          <>
+            <Button variant="primary" size="sm" onClick={handleSave}>
+              Save
+            </Button>
+            <Button variant="secondary" size="sm" onClick={handleCancel}>
+              Cancel
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button variant="secondary" size="sm" onClick={handleEdit}>
+              Edit
+            </Button>
+            <Button variant="danger" size="sm" onClick={handleDelete}>
+              Delete
+            </Button>
+          </>
+        )}
       </div>
-      <button
-        onClick={handleDelete}
-        className="text-neutral-400 dark:text-neutral-500 opacity-0 group-hover:opacity-100 hover:text-red-500 dark:hover:text-red-400 transition-all"
-        aria-label={`Delete task: ${todo.todo}`}
-      >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="1.5"
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
-    </div>
+    </li>
   );
 };
 

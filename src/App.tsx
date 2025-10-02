@@ -1,4 +1,4 @@
-import HomePage from './pages/HomePage';
+import HomePage from "./pages/HomePage";
 import Footer from "./components/Footer";
 import ThemeToggle from "./components/ThemeToggle";
 

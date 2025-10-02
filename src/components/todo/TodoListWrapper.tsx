@@ -2,15 +2,32 @@ import React, { useState, useMemo } from "react";
 import { useTodos } from "../../hooks/useTodos";
 import AddTodoForm from "./form/AddTodoForm";
 import TodoHeader from "./layout/TodoHeader";
-import TodoStats from "./layout/TodoStats";
 import TodoList from "./list/TodoList";
 import TodoFilters from "./layout/TodoFilters";
+import TodoSearch from "./layout/TodoSearch";
+import TodoPagination from "./layout/TodoPagination";
 
 type FilterType = "all" | "active" | "done";
 
 const TodoListWrapper: React.FC = () => {
-  const { todos, isLoading, error, addTodo, toggleTodo, deleteTodo } =
-    useTodos();
+  const {
+    todos,
+    isLoading,
+    error,
+    addTodo,
+    toggleTodo,
+    deleteTodo,
+    editTodoTitle,
+    currentPage,
+    limitPerPage,
+    totalTodos,
+    goToNextPage,
+    goToPrevPage,
+    setLimit,
+    searchTerm,
+    setSearchTerm,
+  } = useTodos();
+
   const [filter, setFilter] = useState<FilterType>("all");
 
   const filteredTodos = useMemo(() => {
@@ -37,36 +54,43 @@ const TodoListWrapper: React.FC = () => {
   };
 
   return (
-    <section className="max-w-xl mx-auto bg-white dark:bg-neutral-800 rounded-lg shadow-sm p-6 sm:p-8">
-      <TodoHeader />
-      <AddTodoForm onAdd={addTodo} />
-
+    <div className="max-w-xl mx-auto bg-white dark:bg-neutral-800 rounded-lg shadow-sm p-6">
       {isLoading && (
-        <p className="text-center text-neutral-500 dark:text-neutral-400 py-8">
+        <div className="text-center text-neutral-500 dark:text-neutral-400 py-8">
           Loading...
-        </p>
+        </div>
       )}
-      {error && <p className="text-center text-red-500 py-8">Error: {error}</p>}
-
+      {error && (
+        <div className="text-center text-red-500 py-8">Error: {error}</div>
+      )}
       {!isLoading && !error && (
         <>
+          <TodoHeader />
+          <AddTodoForm onAdd={addTodo} />
+          <TodoSearch searchTerm={searchTerm} onSearchChange={setSearchTerm} />
           <TodoFilters
             activeFilter={filter}
             onSetFilter={setFilter}
             onClearCompleted={clearCompleted}
             hasCompletedTodos={todos.some((t) => t.completed)}
           />
-          <div className="mt-4">
-            <TodoList
-              todos={filteredTodos}
-              onToggle={toggleTodo}
-              onDelete={deleteTodo}
-            />
-          </div>
-          <TodoStats count={activeCount} />
+          <TodoList
+            todos={filteredTodos}
+            onToggle={toggleTodo}
+            onDelete={deleteTodo}
+            onEdit={editTodoTitle}
+          />
+          <TodoPagination
+            currentPage={currentPage}
+            totalItems={totalTodos}
+            itemsPerPage={limitPerPage}
+            onNextPage={goToNextPage}
+            onPrevPage={goToPrevPage}
+            onLimitChange={setLimit}
+          />
         </>
       )}
-    </section>
+    </div>
   );
 };
 
