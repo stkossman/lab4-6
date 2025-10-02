@@ -41,11 +41,6 @@ const TodoListWrapper: React.FC = () => {
     }
   }, [todos, filter]);
 
-  const activeCount = useMemo(
-    () => todos.filter((t) => !t.completed).length,
-    [todos],
-  );
-
   const clearCompleted = () => {
     const completedIds = todos
       .filter((todo) => todo.completed)

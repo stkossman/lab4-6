@@ -38,10 +38,6 @@ const deleteTodoAPI = async (id: number): Promise<Todo> => {
   return response.data;
 };
 
-interface MutationContext {
-  previousTodos: TodosResponse | undefined;
-}
-
 export const useTodos = () => {
   const queryClient = useQueryClient();
 
@@ -59,7 +55,6 @@ export const useTodos = () => {
   });
 
   const allTodos = data?.todos || [];
-  const apiTotal = data?.total || 0;
 
   const todosWithoutDeleted = useMemo(() => {
     return allTodos.filter((todo) => !deletedIdsRef.current.has(todo.id));
