@@ -55,9 +55,25 @@ editing of todo titles._
 ```mermaid
 graph TB;
     subgraph L1["Data Logic Layer (Custom Hooks)"]
-        direction LR
-        H1["useTheme()<br/>───────<br/><b>State:</b> theme<br/><b>Returns:</b> theme, toggleTheme"]
-        H2["useTodos()<br/>───────<br/><b>State:</b> currentPage, limitPerPage,<br/>searchTerm, filter, deletedIds<br/><b>API:</b> React Query + Axios<br/><b>Returns:</b> todos[], addTodo, toggleTodo,<br/>deleteTodo, editTodoTitle, pagination fns,<br/>activeCount, completedCount"]
+        direction TB
+        
+        subgraph Theme["Theme Management"]
+            H1["useTheme()<br/>───────<br/><b>State:</b> theme<br/><b>Returns:</b> theme, toggleTheme"]
+        end
+        
+        subgraph TodoHooks["Todo Management (Composed)"]
+            direction LR
+            H2["useTodos()<br/><i>Orchestrator Hook</i>"]
+            H3["useTodoData()<br/><b>Fetches:</b> all todos<br/><b>API:</b> React Query + Axios"]
+            H4["useTodoFilters()<br/><b>State:</b> searchTerm, filter<br/><b>Logic:</b> status & search filtering"]
+            H5["usePagination()<br/><b>State:</b> currentPage, limitPerPage<br/><b>Logic:</b> slice & navigate"]
+            H6["useTodoMutations()<br/><b>State:</b> deletedIds (ref)<br/><b>API:</b> add, toggle, edit, delete"]
+            
+            H2 -.->|uses| H3
+            H2 -.->|uses| H4
+            H2 -.->|uses| H5
+            H2 -.->|uses| H6
+        end
     end
 
     subgraph L2["Root Layer"]
@@ -115,20 +131,57 @@ graph TB;
 
 #### Data Logic Layer (Custom Hooks)
 
+#### Theme Management
+
 **`useTheme()` Hook** - Manages theme state (light/dark mode) with a `theme` state variable. Returns `theme` and `toggleTheme()` function. Handles localStorage persistence for cross-session theme retention and directly manipulates the DOM by toggling the `dark` class on the `<html>` element.
 
-**`useTodos()` Hook** - The central data management layer that encapsulates all todo-related business logic:
-- **State Management**: Maintains `currentPage`, `limitPerPage`, `searchTerm`, `filter` ("all"/"active"/"done"), and `deletedIdsRef` (persistent Set for tracking deleted items across refetches)
-- **API Integration**: Uses React Query with Axios to fetch all todos once (`limit=0`) and handle optimistic mutations (create, toggle, edit, delete)
-- **Filtering Pipeline**: Applies filters in strict sequence: deletion filtering → status filtering → search filtering → client-side pagination
-- **Optimistic Updates**: Implements immediate UI updates via `onMutate` callbacks with automatic rollback via `onError` if the server request fails
-- **Returns**: Paginated `todos[]` array, CRUD action functions (`addTodo`, `toggleTodo`, `deleteTodo`, `editTodoTitle`), pagination controls (`goToNextPage`, `goToPrevPage`, `setLimit`), filter state (`filter`, `setFilter`), search state (`searchTerm`, `setSearchTerm`), and statistics (`activeCount`, `completedCount`)
+#### Todo Management (Composed Hooks)
+
+**`useTodos()` Hook (Orchestrator)** - The central coordinator that composes four specialized hooks to provide a complete todo management API. This orchestrator hook maintains the same public interface as before, making the refactoring transparent to consuming components. It chains together data fetching, filtering, pagination, and mutation operations to deliver a unified feature set.
+
+**`useTodoData()` Hook** - Handles all API communication and data fetching:
+
+- **API Integration**: Uses React Query with Axios to fetch all todos once (`limit=0`) from DummyJSON API
+- **Query Configuration**: Sets `staleTime` to 5 minutes to reduce unnecessary refetches
+- **Returns**: `allTodos` array, loading state, error messages, and `queryClient` instance for cache manipulation
+- **Exports API Functions**: `fetchAllTodos`, `updateTodoAPI`, `editTodoTitleAPI`, `deleteTodoAPI` for use by mutation hooks
+
+**`useTodoFilters()` Hook** - Manages search and status filtering logic:
+
+- **State Management**: Maintains `searchTerm` (string) and `filter` (FilterType: "all"/"active"/"done")
+- **Filtering Pipeline**: Applies filters in sequence: status filter (active/done/all) → search filter (case-insensitive text matching)
+- **Statistics Calculation**: Computes `activeCount` and `completedCount` from the input todos array using memoized calculations
+- **Returns**: Filter state, setters, filtered todos array, and statistics
+- **Reusability**: Can be reused in any feature requiring similar filtering capabilities
+
+**`usePagination()` Hook** - Implements client-side pagination with automatic page reset:
+
+- **State Management**: Maintains `currentPage` (number) and `limitPerPage` (number, default 10)
+- **Auto-Reset Logic**: Uses `useEffect` to reset to page 1 when dependencies change (e.g., search or filter changes)
+- **Pagination Calculation**: Slices the input array based on current page and limit using `Array.slice()`
+- **Navigation Functions**: Provides `goToNextPage`, `goToPrevPage`, and `setLimit` with boundary checks
+- **Returns**: Current page info, paginated items, total counts, and navigation functions
+- **Generic Design**: Accepts any array of items, making it reusable across different data types
+
+**`useTodoMutations()` Hook** - Handles all CRUD operations with optimistic updates:
+
+- **State Management**: Uses `useRef` with `Set<number>` to track deleted IDs persistently across renders
+- **Optimistic Updates**: All mutations immediately update React Query cache via `onMutate` callbacks before API calls complete
+- **Error Handling**: Implements rollback logic in `onError` callbacks to revert optimistic updates if API requests fail
+- **CRUD Operations**:
+    - `addTodo`: Creates new todo with timestamp ID, prepends to cache
+    - `toggleTodo`: Flips completion status with optimistic UI update
+    - `editTodoTitle`: Updates todo text with optimistic cache update
+    - `deleteTodo`: Adds ID to deleted set, filters from cache, adjusts pagination if needed
+- **Helper Function**: `filterDeletedTodos` removes locally deleted items from any todos array
+- **Returns**: CRUD mutation functions and deletion filter function
+
 
 #### Root Layer
 
 **`App`** - The composition root and entry point. Renders the main layout structure with social media links (GitHub, LinkedIn) in the header, `ThemeToggle` button for theme switching, and `HomePage` component in the main content area. Holds no application state; purely structural.
 
-#### Page & Utility Layer
+#### Page \& Utility Layer
 
 **`ThemeToggle`** - A utility component that consumes the `useTheme()` hook. Displays a toggle button that allows users to switch between light and dark modes. Reflects the current theme state and invokes `toggleTheme()` on click.
 
@@ -138,19 +191,19 @@ graph TB;
 
 **`TodoHeader`** - A presentational component displaying the application title. Rendered at the page level (in HomePage) rather than within the feature container, providing better semantic structure. Contains no state or logic.
 
-**`TodoListWrapper`** - The primary smart/container component that consumes the `useTodos()` hook. Receives all data and functions from the hook and distributes them to child components via props. Holds no local state itself; follows the Container/Presentational pattern by acting as a pure orchestrator between the data layer and presentation layer. Handles the `clearCompleted` function locally by iterating through completed todos and calling `deleteTodo` for each.
+**`TodoListWrapper`** - The primary smart/container component that consumes the `useTodos()` orchestrator hook. Receives all data and functions from the composed hook system and distributes them to child components via props. Holds no local state itself; follows the Container/Presentational pattern by acting as a pure orchestrator between the data layer and presentation layer. Handles the `clearCompleted` function locally by iterating through completed todos and calling `deleteTodo` for each. Despite the internal hook refactoring, this component's implementation remains unchanged due to the stable `useTodos()` interface.
 
 #### Feature Components
 
-**`AddTodoForm`** - A controlled form component with local `inputText` state for managing the input field. Receives `onAdd` callback as a prop. On form submission, validates the input and invokes `onAdd(text)`, sending the new todo text upward to `TodoListWrapper`, which then calls the hook's `addTodo` function.
+**`AddTodoForm`** - A controlled form component with local `inputText` state for managing the input field. Receives `onAdd` callback as a prop. On form submission, validates the input and invokes `onAdd(text)`, sending the new todo text upward to `TodoListWrapper`, which then calls the orchestrator hook's `addTodo` function (internally routed to `useTodoMutations`).
 
-**`TodoSearch`** - An expandable search input component with local state (`isExpanded` boolean, `inputRef` for focus management). Features click-to-expand animation that reveals the input field. Automatically focuses the input when expanded using `useEffect`. Receives `searchTerm` and `onSearchChange` props. Callbacks search term changes upward, triggering filtering in the `useTodos` hook.
+**`TodoSearch`** - An expandable search input component with local state (`isExpanded` boolean, `inputRef` for focus management). Features click-to-expand animation that reveals the input field. Automatically focuses the input when expanded using `useEffect`. Receives `searchTerm` and `onSearchChange` props. Callbacks search term changes upward, triggering filtering in the `useTodoFilters` hook (via `useTodos` orchestrator).
 
-**`TodoFilters`** - A filter control component displaying three filter buttons (All/Active/Done) and a conditional "Clear Completed" button. Receives `activeFilter`, `onSetFilter`, `onClearCompleted`, and `hasCompletedTodos` props. Uses the reusable `FilterButton` component for consistent active/inactive styling. Callbacks filter changes upward to update the hook's filter state.
+**`TodoFilters`** - A filter control component displaying three filter buttons (All/Active/Done) and a conditional "Clear Completed" button. Receives `activeFilter`, `onSetFilter`, `onClearCompleted`, and `hasCompletedTodos` props. Uses the reusable `FilterButton` component for consistent active/inactive styling. Callbacks filter changes upward to update the `useTodoFilters` hook's filter state (via `useTodos` orchestrator).
 
 **`TodoList`** - A list container component that receives the paginated and filtered `todos[]` array along with action callbacks (`onToggle`, `onDelete`, `onEdit`). Conditionally renders either a list of `TodoItem` components (mapped over the todos array) or the `TodoEmpty` component when the filtered list is empty. Passes all callbacks down to each `TodoItem`.
 
-**`TodoPagination`** - A pagination control component displaying current page information ("Showing X-Y of Z items") and navigation controls. Receives `currentPage`, `totalItems`, `itemsPerPage`, `onNextPage`, `onPrevPage`, and `onLimitChange` props. Uses the generic `Button` component with `disabled` prop for Previous/Next buttons. Includes a dropdown select for changing items per page (5/10/20/30). Callbacks all navigation actions upward to update pagination state in the hook.
+**`TodoPagination`** - A pagination control component displaying current page information ("Showing X-Y of Z items") and navigation controls. Receives `currentPage`, `totalItems`, `itemsPerPage`, `onNextPage`, `onPrevPage`, and `onLimitChange` props. Uses the generic `Button` component with `disabled` prop for Previous/Next buttons. Includes a dropdown select for changing items per page (5/10/20/30). Callbacks all navigation actions upward to update the `usePagination` hook's state (via `useTodos` orchestrator).
 
 #### List Components
 
@@ -163,3 +216,17 @@ graph TB;
 **`Button`** - A generic, reusable button component with configurable props: `variant` (primary/secondary/danger/ghost), `size` (sm/md/lg), `disabled` (boolean), and `children` (button content). Automatically handles disabled state styling with reduced opacity, cursor changes, and hover effect prevention. Used throughout the application for consistent button appearance and behavior.
 
 **`FilterButton`** - A specialized button component for filter-style interactions. Receives `label` (string), `isActive` (boolean), and `onClick` (callback) props. Applies different styling based on the `isActive` state: dark background with light text when active, light background with dark text when inactive. Used in `TodoFilters` for the All/Active/Done buttons.
+
+#### Hook Composition Benefits
+
+**Separation of Concerns** - Each specialized hook handles a single responsibility: data fetching (`useTodoData`), filtering (`useTodoFilters`), pagination (`usePagination`), or mutations (`useTodoMutations`).
+
+**Reusability** - Hooks like `usePagination` and `useTodoFilters` are designed to work with any data type, making them reusable across different features.
+
+**Testability** - Each hook can be tested independently with mock data and controlled inputs, improving test coverage and maintainability.
+
+**Maintainability** - Changes to pagination logic don't affect filtering logic, and vice versa, reducing the risk of unintended side effects.
+
+**Composability** - The orchestrator pattern (`useTodos`) demonstrates how complex features can be built by composing simpler, focused hooks.
+
+**Stable Interface** - Despite internal refactoring, `useTodos` maintains the same public API, ensuring consuming components remain unchanged and backward compatible.

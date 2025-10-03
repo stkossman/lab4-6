@@ -1,262 +1,76 @@
-import axios from 'axios';
-import { useState, useMemo, useRef, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Todo } from "../types/todo";
-
-const API_URL = "https://dummyjson.com/todos";
-
-export type FilterType = "all" | "active" | "done";
-
-interface TodosResponse {
-  todos: Todo[];
-  total: number;
-  skip: number;
-  limit: number;
-}
-
-const fetchAllTodos = async (): Promise<TodosResponse> => {
-  const response = await axios.get(`${API_URL}?limit=0`);
-  return response.data;
-};
-
-const updateTodoAPI = async (updatedTodo: Pick<Todo, 'id' | 'completed'>): Promise<Todo> => {
-  const response = await axios.put(`${API_URL}/${updatedTodo.id}`, {
-    completed: updatedTodo.completed,
-  });
-  return response.data;
-};
-
-const editTodoTitleAPI = async (id: number, title: string): Promise<Todo> => {
-  const response = await axios.put(`${API_URL}/${id}`, {
-    todo: title,
-  });
-  return response.data;
-};
-
-const deleteTodoAPI = async (id: number): Promise<Todo> => {
-  const response = await axios.delete(`${API_URL}/${id}`);
-  return response.data;
-};
+import { useMemo } from 'react';
+import { useTodoData } from './useTodoData';
+import { useTodoFilters } from './useTodoFilters';
+import { usePagination } from './usePagination';
+import { useTodoMutations } from './useTodoMutations';
 
 export const useTodos = () => {
-  const queryClient = useQueryClient();
+  const { allTodos, isLoading, error } = useTodoData();
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [limitPerPage, setLimitPerPage] = useState(10);
+  const { 
+    addTodo, 
+    toggleTodo, 
+    deleteTodo, 
+    editTodoTitle,
+    filterDeletedTodos 
+  } = useTodoMutations();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<FilterType>("all");
-
-  const deletedIdsRef = useRef<Set<number>>(new Set());
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, filter]);
-
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['todos'],
-    queryFn: fetchAllTodos,
-    staleTime: 5 * 60 * 1000,
-  });
-  
-  const allTodos = data?.todos || [];
-
-  const todosWithoutDeleted = useMemo(() => {
-    return allTodos.filter(todo => !deletedIdsRef.current.has(todo.id));
-  }, [allTodos]);
-
-  const statusFilteredTodos = useMemo(() => {
-    switch (filter) {
-      case "active":
-        return todosWithoutDeleted.filter((todo) => !todo.completed);
-      case "done":
-        return todosWithoutDeleted.filter((todo) => todo.completed);
-      default:
-        return todosWithoutDeleted;
-    }
-  }, [todosWithoutDeleted, filter]);
-
-  const searchFilteredTodos = useMemo(() => {
-    if (!searchTerm.trim()) return statusFilteredTodos;
-    
-    return statusFilteredTodos.filter(todo =>
-      todo.todo.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [statusFilteredTodos, searchTerm]);
-
-  const totalTodos = searchFilteredTodos.length;
-
-  const paginatedTodos = useMemo(() => {
-    const startIndex = (currentPage - 1) * limitPerPage;
-    const endIndex = startIndex + limitPerPage;
-    return searchFilteredTodos.slice(startIndex, endIndex);
-  }, [searchFilteredTodos, currentPage, limitPerPage]);
-
-  const activeCount = useMemo(
-    () => todosWithoutDeleted.filter((t) => !t.completed).length,
-    [todosWithoutDeleted],
-  );
-  
-  const completedCount = useMemo(
-    () => todosWithoutDeleted.filter((t) => t.completed).length,
-    [todosWithoutDeleted],
+  const todosWithoutDeleted = useMemo(
+    () => filterDeletedTodos(allTodos),
+    [allTodos, filterDeletedTodos]
   );
 
-  const totalPages = Math.ceil(totalTodos / limitPerPage);
+  const {
+    searchTerm,
+    setSearchTerm,
+    filter,
+    setFilter,
+    filteredTodos,
+    activeCount,
+    completedCount,
+  } = useTodoFilters({ todos: todosWithoutDeleted });
   
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(prev => prev + 1);
-    }
-  };
-  
-  const goToPrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(prev => prev - 1);
-    }
-  };
-  
-  const setLimit = (limit: number) => {
-    setLimitPerPage(limit);
+  const {
+    currentPage,
+    limitPerPage,
+    totalItems: totalTodos,
+    paginatedItems: paginatedTodos,
+    goToNextPage,
+    goToPrevPage,
+    setLimit,
+    setCurrentPage,
+  } = usePagination({ 
+    items: filteredTodos,
+    dependencies: [searchTerm, filter]
+  });
+
+  const addTodoWithReset = (todoText: string) => {
+    addTodo(todoText);
     setCurrentPage(1);
   };
-
-  const addTodo = (todoText: string) => {
-    const newTodo: Todo = {
-      id: Date.now(),
-      todo: todoText,
-      completed: false,
-      userId: 1,
-    };
-    
-    queryClient.setQueryData(['todos'], (oldData: TodosResponse | undefined) => {
-      if (!oldData) return { todos: [newTodo], total: 1, skip: 0, limit: 0 };
-      return {
-        ...oldData,
-        todos: [newTodo, ...oldData.todos],
-        total: oldData.total + 1,
-      };
-    });
-    
-    setCurrentPage(1);
-  };
-  
-  const { mutate: toggleTodo } = useMutation({
-    mutationFn: (id: number) => {
-      if (id < 1000) {
-        const todo = todosWithoutDeleted.find((t) => t.id === id);
-        if (!todo) throw new Error("Todo not found");
-        return updateTodoAPI({ id, completed: !todo.completed });
-      }
-      return Promise.resolve({} as Todo);
-    },
-    onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ['todos'] });
-      const previousTodos = queryClient.getQueryData(['todos']);
-      
-      queryClient.setQueryData(['todos'], (old: TodosResponse | undefined) => {
-        if (!old) return old;
-        return {
-          ...old,
-          todos: old.todos.map(t => t.id === id ? { ...t, completed: !t.completed } : t)
-        };
-      });
-      
-      return { previousTodos };
-    },
-    onError: (_err, _id, context) => {
-      if (context?.previousTodos) {
-        queryClient.setQueryData(['todos'], context.previousTodos);
-      }
-    },
-  });
-
-  const { mutate: editTodoTitle } = useMutation({
-    mutationFn: ({ id, newTitle }: { id: number; newTitle: string }) => {
-      if (id < 1000) {
-        return editTodoTitleAPI(id, newTitle);
-      }
-      return Promise.resolve({} as Todo);
-    },
-    onMutate: async ({ id, newTitle }) => {
-      await queryClient.cancelQueries({ queryKey: ['todos'] });
-      const previousTodos = queryClient.getQueryData(['todos']);
-      
-      queryClient.setQueryData(['todos'], (old: TodosResponse | undefined) => {
-        if (!old) return old;
-        return {
-          ...old,
-          todos: old.todos.map(t => t.id === id ? { ...t, todo: newTitle } : t)
-        };
-      });
-      
-      return { previousTodos };
-    },
-    onError: (_err, _variables, context) => {
-      if (context?.previousTodos) {
-        queryClient.setQueryData(['todos'], context.previousTodos);
-      }
-    },
-  });
-
-  const { mutate: deleteTodo } = useMutation({
-    mutationFn: (id: number) => {
-      if (id < 1000) {
-        return deleteTodoAPI(id);
-      }
-      return Promise.resolve({} as Todo);
-    },
-    onMutate: async (id) => {
-      deletedIdsRef.current.add(id);
-      
-      await queryClient.cancelQueries({ queryKey: ['todos'] });
-      const previousTodos = queryClient.getQueryData(['todos']);
-      
-      queryClient.setQueryData(['todos'], (old: TodosResponse | undefined) => {
-        if (!old) return old;
-        return {
-          ...old,
-          todos: old.todos.filter((t) => t.id !== id),
-          total: old.total - 1,
-        };
-      });
-      
-      const remainingTodosCount = searchFilteredTodos.length - 1;
-      const startIndex = (currentPage - 1) * limitPerPage;
-      
-      if (startIndex >= remainingTodosCount && currentPage > 1) {
-        setCurrentPage(prev => prev - 1);
-      }
-      
-      return { previousTodos };
-    },
-    onError: (_err, id, context) => {
-      deletedIdsRef.current.delete(id);
-      
-      if (context?.previousTodos) {
-        queryClient.setQueryData(['todos'], context.previousTodos);
-      }
-    },
-  });
   
   return {
     todos: paginatedTodos,
     isLoading,
-    error: error?.message,
-    addTodo,
+    error,
+
+    addTodo: addTodoWithReset,
     toggleTodo,
     deleteTodo,
-    editTodoTitle: (id: number, newTitle: string) => editTodoTitle({ id, newTitle }),
+    editTodoTitle,
+
     currentPage,
     limitPerPage,
     totalTodos,
     goToNextPage,
     goToPrevPage,
     setLimit,
+
     searchTerm,
     setSearchTerm,
     filter,
     setFilter,
+
     activeCount,
     completedCount,
   };

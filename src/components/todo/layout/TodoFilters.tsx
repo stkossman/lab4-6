@@ -1,13 +1,6 @@
 import FilterButton from "../../ui/FilterButton";
 
-interface TodoFiltersProps {
-  activeFilter: FilterType;
-  onSetFilter: (filter: FilterType) => void;
-  onClearCompleted: () => void;
-  hasCompletedTodos: boolean;
-}
-
-type FilterType = "all" | "active" | "done";
+import type { TodoFiltersProps } from "../../../types/todo";
 
 const TodoFilters: React.FC<TodoFiltersProps> = ({
   activeFilter,
