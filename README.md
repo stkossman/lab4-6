@@ -94,8 +94,8 @@ graph TB;
 
     subgraph L5["Feature Components"]
         direction LR
-        F1["AddTodoForm<br/>───────<br/><b>State:</b> inputText<br/><b>Props:</b> onAdd"]
-        F2["TodoSearch<br/>───────<br/><b>State:</b> isExpanded, inputRef<br/><b>Props:</b> searchTerm, onSearchChange"]
+        F1["AddTodoForm<br/>───────<br/><b>State:</b> text<br/><b>Props:</b> onAdd"]
+        F2["TodoSearch<br/>───────<br/><b>Props:</b> searchTerm, onSearchChange"]
         F3["TodoFilters<br/>───────<br/><b>Props:</b> activeFilter, onSetFilter,<br/>onClearCompleted, hasCompletedTodos"]
         F4["TodoList<br/>───────<br/><b>Props:</b> todos[], onToggle,<br/>onDelete, onEdit"]
         F5["TodoPagination<br/>───────<br/><b>Props:</b> currentPage, totalItems,<br/>itemsPerPage, onNextPage,<br/>onPrevPage, onLimitChange"]
@@ -195,9 +195,9 @@ graph TB;
 
 #### Feature Components
 
-**`AddTodoForm`** - A controlled form component with local `inputText` state for managing the input field. Receives `onAdd` callback as a prop. On form submission, validates the input and invokes `onAdd(text)`, sending the new todo text upward to `TodoListWrapper`, which then calls the orchestrator hook's `addTodo` function (internally routed to `useTodoMutations`).
+**`AddTodoForm`** - A controlled form component with local `text` state for managing the input field. Receives `onAdd` callback as a prop. On form submission, validates the input (checks for non-empty trimmed text) and invokes `onAdd(text)`, sending the new todo text upward to `TodoListWrapper`, which then calls the orchestrator hook's `addTodo` function (internally routed to `useTodoMutations`). Clears the input field by resetting state to an empty string after successful submission.
 
-**`TodoSearch`** - An expandable search input component with local state (`isExpanded` boolean, `inputRef` for focus management). Features click-to-expand animation that reveals the input field. Automatically focuses the input when expanded using `useEffect`. Receives `searchTerm` and `onSearchChange` props. Callbacks search term changes upward, triggering filtering in the `useTodoFilters` hook (via `useTodos` orchestrator).
+**`TodoSearch`** - A controlled input component that receives `searchTerm` and `onSearchChange` props. Contains no local state, making it a fully controlled component where the parent manages the search value. Features a full-width input field with a transparent background and bottom border that changes color on focus. Callbacks search term changes upward on every keystroke via the `onChange` handler, triggering filtering in the `useTodoFilters` hook (via `useTodos` orchestrator).
 
 **`TodoFilters`** - A filter control component displaying three filter buttons (All/Active/Done) and a conditional "Clear Completed" button. Receives `activeFilter`, `onSetFilter`, `onClearCompleted`, and `hasCompletedTodos` props. Uses the reusable `FilterButton` component for consistent active/inactive styling. Callbacks filter changes upward to update the `useTodoFilters` hook's filter state (via `useTodos` orchestrator).
 
