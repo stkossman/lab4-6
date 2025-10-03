@@ -6,7 +6,7 @@ This repository will be for works from 4 to 6 from my university React course.
 
 _Create a Todo List app that uses a custom hook to handle all data fetching and state management for the todo items, utilizing a fake REST API that supports CRUD operations. The custom hook should abstract away the logic for fetching the todo list, adding new todos, updating existing ones, and deletim them, providing a clean interface to any component that needs todo data and functionality. + The Component Tree & Data Flow diagram._
 
-## What needed to be done for homework #4:
+## What needed to be done for homework #5 and #6:
 _Extend the previous To-Do List application to include client-side search, pagination, and
 editing of todo titles._
 
