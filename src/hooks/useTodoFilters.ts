@@ -1,12 +1,10 @@
-import { useState, useMemo } from 'react';
-import type { UseTodoFiltersProps } from '../types/todo';
+import { useState, useMemo, useCallback } from "react";
+import type { UseTodoFiltersProps } from "../types/todo";
 
 export type FilterType = "all" | "active" | "done";
 
-
-
 export const useTodoFilters = ({ todos }: UseTodoFiltersProps) => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
 
   const statusFilteredTodos = useMemo(() => {
@@ -22,9 +20,9 @@ export const useTodoFilters = ({ todos }: UseTodoFiltersProps) => {
 
   const searchFilteredTodos = useMemo(() => {
     if (!searchTerm.trim()) return statusFilteredTodos;
-    
-    return statusFilteredTodos.filter(todo =>
-      todo.todo.toLowerCase().includes(searchTerm.toLowerCase())
+
+    return statusFilteredTodos.filter((todo) =>
+      todo.todo.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   }, [statusFilteredTodos, searchTerm]);
 
@@ -32,17 +30,25 @@ export const useTodoFilters = ({ todos }: UseTodoFiltersProps) => {
     () => todos.filter((t) => !t.completed).length,
     [todos],
   );
-  
+
   const completedCount = useMemo(
     () => todos.filter((t) => t.completed).length,
     [todos],
   );
-  
+
+  const handleSearchCHange = useCallback((term: string) => {
+    setSearchTerm(term);
+  }, []);
+
+  const handleFilterChange = useCallback((newFilter: FilterType) => {
+    setFilter(newFilter);
+  }, []);
+
   return {
     searchTerm,
-    setSearchTerm,
+    setSearchTerm: handleSearchCHange,
     filter,
-    setFilter,
+    setFilter: handleFilterChange,
     filteredTodos: searchFilteredTodos,
     activeCount,
     completedCount,

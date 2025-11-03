@@ -1,4 +1,4 @@
-import React from "react";
+import { useCallback, useMemo } from "react";
 import { useTodos } from "../../hooks/useTodos";
 import AddTodoForm from "./form/AddTodoForm";
 import TodoList from "./list/TodoList";
@@ -28,10 +28,12 @@ const TodoListWrapper: React.FC = () => {
     completedCount,
   } = useTodos();
 
-  const clearCompleted = () => {
+  const clearCompleted = useCallback(() => {
     const completedTodos = todos.filter((todo) => todo.completed);
     completedTodos.forEach((todo) => deleteTodo(todo.id));
-  };
+  }, [todos, deleteTodo]);
+
+  const hasCompletedTodos = useMemo(() => completedCount > 0, [completedCount]);
 
   return (
     <div className="w-full max-w-3xl mx-auto">
@@ -48,15 +50,12 @@ const TodoListWrapper: React.FC = () => {
       {!isLoading && !error && (
         <>
           <AddTodoForm onAdd={addTodo} />
-          <TodoSearch
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-          />
+          <TodoSearch searchTerm={searchTerm} onSearchChange={setSearchTerm} />
           <TodoFilters
             activeFilter={filter}
             onSetFilter={setFilter}
             onClearCompleted={clearCompleted}
-            hasCompletedTodos={completedCount > 0}
+            hasCompletedTodos={hasCompletedTodos}
           />
           <TodoList
             todos={todos}

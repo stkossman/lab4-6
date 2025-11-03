@@ -1,23 +1,18 @@
-import { useMemo } from 'react';
-import { useTodoData } from './useTodoData';
-import { useTodoFilters } from './useTodoFilters';
-import { usePagination } from './usePagination';
-import { useTodoMutations } from './useTodoMutations';
+import { useMemo, useCallback } from "react";
+import { useTodoData } from "./useTodoData";
+import { useTodoFilters } from "./useTodoFilters";
+import { usePagination } from "./usePagination";
+import { useTodoMutations } from "./useTodoMutations";
 
 export const useTodos = () => {
   const { allTodos, isLoading, error } = useTodoData();
 
-  const { 
-    addTodo, 
-    toggleTodo, 
-    deleteTodo, 
-    editTodoTitle,
-    filterDeletedTodos 
-  } = useTodoMutations();
+  const { addTodo, toggleTodo, deleteTodo, editTodoTitle, filterDeletedTodos } =
+    useTodoMutations();
 
   const todosWithoutDeleted = useMemo(
     () => filterDeletedTodos(allTodos),
-    [allTodos, filterDeletedTodos]
+    [allTodos, filterDeletedTodos],
   );
 
   const {
@@ -29,7 +24,7 @@ export const useTodos = () => {
     activeCount,
     completedCount,
   } = useTodoFilters({ todos: todosWithoutDeleted });
-  
+
   const {
     currentPage,
     limitPerPage,
@@ -39,16 +34,19 @@ export const useTodos = () => {
     goToPrevPage,
     setLimit,
     setCurrentPage,
-  } = usePagination({ 
+  } = usePagination({
     items: filteredTodos,
-    dependencies: [searchTerm, filter]
+    dependencies: [searchTerm, filter],
   });
 
-  const addTodoWithReset = (todoText: string) => {
-    addTodo(todoText);
-    setCurrentPage(1);
-  };
-  
+  const addTodoWithReset = useCallback(
+    (todoText: string) => {
+      addTodo(todoText);
+      setCurrentPage(1);
+    },
+    [addTodo, setCurrentPage],
+  );
+
   return {
     todos: paginatedTodos,
     isLoading,

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { TodoSearchProps } from "../../../types/todo";
 
 const TodoSearch: React.FC<TodoSearchProps> = ({
@@ -17,4 +18,4 @@ const TodoSearch: React.FC<TodoSearchProps> = ({
   );
 };
 
-export default TodoSearch;
+export default memo(TodoSearch);

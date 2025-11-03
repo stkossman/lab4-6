@@ -1,8 +1,13 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import Button from "../../ui/Button";
 import type { TodoItemProps } from "../../../types/todo";
 
-const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggle, onDelete, onEdit }) => {
+const TodoItem: React.FC<TodoItemProps> = ({
+  todo,
+  onToggle,
+  onDelete,
+  onEdit,
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(todo.todo);
 
@@ -31,9 +36,9 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggle, onDelete, onEdit })
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSave();
-    } else if (e.key === 'Escape') {
+    } else if (e.key === "Escape") {
       handleCancel();
     }
   };
@@ -46,7 +51,7 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggle, onDelete, onEdit })
         onChange={handleToggle}
         className="w-5 h-5 rounded border-neutral-300 dark:border-neutral-600 text-neutral-800 dark:text-neutral-200 focus:ring-2 focus:ring-neutral-400 cursor-pointer"
       />
-      
+
       {isEditing ? (
         <input
           type="text"
@@ -67,7 +72,7 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggle, onDelete, onEdit })
           {todo.todo}
         </span>
       )}
-      
+
       <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         {isEditing ? (
           <>
@@ -93,4 +98,4 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggle, onDelete, onEdit })
   );
 };
 
-export default TodoItem;
+export default memo(TodoItem);

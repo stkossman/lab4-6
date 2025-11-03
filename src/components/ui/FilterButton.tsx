@@ -1,4 +1,4 @@
-import React from "react";
+import { memo } from "react";
 
 export interface FilterButtonProps {
   label: string;
@@ -30,4 +30,4 @@ const FilterButton: React.FC<FilterButtonProps> = ({
   );
 };
 
-export default FilterButton;
+export default memo(FilterButton);

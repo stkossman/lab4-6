@@ -1,3 +1,4 @@
+import { memo } from "react";
 import Button from "../../ui/Button";
 import type { TodoPaginationProps } from "../../../types/todo";
 
@@ -56,4 +57,4 @@ const TodoPagination: React.FC<TodoPaginationProps> = ({
   );
 };
 
-export default TodoPagination;
+export default memo(TodoPagination);

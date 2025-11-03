@@ -7,6 +7,7 @@ This repository will be for works from 4 to 6 from my university React course.
 _Create a Todo List app that uses a custom hook to handle all data fetching and state management for the todo items, utilizing a fake REST API that supports CRUD operations. The custom hook should abstract away the logic for fetching the todo list, adding new todos, updating existing ones, and deletim them, providing a clean interface to any component that needs todo data and functionality. + The Component Tree & Data Flow diagram._
 
 ## What needed to be done for homework #5 and #6:
+
 _Extend the previous To-Do List application to include client-side search, pagination, and
 editing of todo titles._
 
@@ -56,11 +57,11 @@ editing of todo titles._
 graph TB;
     subgraph L1["Data Logic Layer (Custom Hooks)"]
         direction TB
-        
+
         subgraph Theme["Theme Management"]
             H1["useTheme()<br/>───────<br/><b>State:</b> theme<br/><b>Returns:</b> theme, toggleTheme"]
         end
-        
+
         subgraph TodoHooks["Todo Management (Composed)"]
             direction LR
             H2["useTodos()<br/><i>Orchestrator Hook</i>"]
@@ -68,7 +69,7 @@ graph TB;
             H4["useTodoFilters()<br/><b>State:</b> searchTerm, filter<br/><b>Logic:</b> status & search filtering"]
             H5["usePagination()<br/><b>State:</b> currentPage, limitPerPage<br/><b>Logic:</b> slice & navigate"]
             H6["useTodoMutations()<br/><b>State:</b> deletedIds (ref)<br/><b>API:</b> add, toggle, edit, delete"]
-            
+
             H2 -.->|uses| H3
             H2 -.->|uses| H4
             H2 -.->|uses| H5
@@ -169,13 +170,12 @@ graph TB;
 - **Optimistic Updates**: All mutations immediately update React Query cache via `onMutate` callbacks before API calls complete
 - **Error Handling**: Implements rollback logic in `onError` callbacks to revert optimistic updates if API requests fail
 - **CRUD Operations**:
-    - `addTodo`: Creates new todo with timestamp ID, prepends to cache
-    - `toggleTodo`: Flips completion status with optimistic UI update
-    - `editTodoTitle`: Updates todo text with optimistic cache update
-    - `deleteTodo`: Adds ID to deleted set, filters from cache, adjusts pagination if needed
+  - `addTodo`: Creates new todo with timestamp ID, prepends to cache
+  - `toggleTodo`: Flips completion status with optimistic UI update
+  - `editTodoTitle`: Updates todo text with optimistic cache update
+  - `deleteTodo`: Adds ID to deleted set, filters from cache, adjusts pagination if needed
 - **Helper Function**: `filterDeletedTodos` removes locally deleted items from any todos array
 - **Returns**: CRUD mutation functions and deletion filter function
-
 
 #### Root Layer
 

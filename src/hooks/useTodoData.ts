@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Todo, TodosResponse } from "../types/todo";
 
@@ -9,14 +9,19 @@ export const fetchAllTodos = async (): Promise<TodosResponse> => {
   return response.data;
 };
 
-export const updateTodoAPI = async (updatedTodo: Pick<Todo, 'id' | 'completed'>): Promise<Todo> => {
+export const updateTodoAPI = async (
+  updatedTodo: Pick<Todo, "id" | "completed">,
+): Promise<Todo> => {
   const response = await axios.put(`${API_URL}/${updatedTodo.id}`, {
     completed: updatedTodo.completed,
   });
   return response.data;
 };
 
-export const editTodoTitleAPI = async (id: number, title: string): Promise<Todo> => {
+export const editTodoTitleAPI = async (
+  id: number,
+  title: string,
+): Promise<Todo> => {
   const response = await axios.put(`${API_URL}/${id}`, {
     todo: title,
   });
@@ -30,15 +35,15 @@ export const deleteTodoAPI = async (id: number): Promise<Todo> => {
 
 export const useTodoData = () => {
   const queryClient = useQueryClient();
-  
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ['todos'],
+    queryKey: ["todos"],
     queryFn: fetchAllTodos,
     staleTime: 5 * 60 * 1000,
   });
-  
+
   const allTodos = data?.todos || [];
-  
+
   return {
     allTodos,
     isLoading,

@@ -1,5 +1,5 @@
+import { memo, useCallback } from "react";
 import FilterButton from "../../ui/FilterButton";
-
 import type { TodoFiltersProps } from "../../../types/todo";
 
 const TodoFilters: React.FC<TodoFiltersProps> = ({
@@ -8,22 +8,32 @@ const TodoFilters: React.FC<TodoFiltersProps> = ({
   onClearCompleted,
   hasCompletedTodos,
 }) => {
+  const handleAllFilter = useCallback(() => onSetFilter("all"), [onSetFilter]);
+  const handleActiveFilter = useCallback(
+    () => onSetFilter("active"),
+    [onSetFilter],
+  );
+  const handleDoneFilter = useCallback(
+    () => onSetFilter("done"),
+    [onSetFilter],
+  );
+
   return (
     <div className="flex gap-2 mb-4 flex-wrap">
       <FilterButton
         label="All"
         isActive={activeFilter === "all"}
-        onClick={() => onSetFilter("all")}
+        onClick={handleAllFilter}
       />
       <FilterButton
         label="Active"
         isActive={activeFilter === "active"}
-        onClick={() => onSetFilter("active")}
+        onClick={handleActiveFilter}
       />
       <FilterButton
         label="Done"
         isActive={activeFilter === "done"}
-        onClick={() => onSetFilter("done")}
+        onClick={handleDoneFilter}
       />
       {hasCompletedTodos && (
         <button
@@ -37,4 +47,4 @@ const TodoFilters: React.FC<TodoFiltersProps> = ({
   );
 };
 
-export default TodoFilters;
+export default memo(TodoFilters);
