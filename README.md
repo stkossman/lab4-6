@@ -1,4 +1,4 @@
-# Homework/Lab 4-6
+# Homework/Lab 4-7
 
 This repository will be for works from 4 to 6 from my university React course.
 
@@ -10,6 +10,9 @@ _Create a Todo List app that uses a custom hook to handle all data fetching and 
 
 _Extend the previous To-Do List application to include client-side search, pagination, and
 editing of todo titles._
+
+## What needed to be done for homework #7:
+_Optimize application to minimize unnecessary re-renders by using React.memo, useCallback, useMemo without over-memoization. Identify perfomance bottlenecks using React DevTols Profiler and apply targeted optimizations to components and custom hooks._
 
 ## Tech Stack
 
